@@ -1188,7 +1188,8 @@ document.addEventListener("DOMContentLoaded", () => {
         marketLink,
         marketValue,
         reservePrice: isAuction ? reservePrice : null,
-        buyNowPrice: isAuction ? buyNowPrice : null
+        buyNowPrice: isAuction ? buyNowPrice : null,
+        sellerId: currentUser ? currentUser.id : null
       };
 
       if (isAuction) {
@@ -1225,6 +1226,7 @@ document.addEventListener("DOMContentLoaded", () => {
         marketValue,
         reservePrice,
         buyNowPrice,
+        sellerId: currentUser ? currentUser.id : null,
         createdAt: new Date().toISOString()
       };
 
@@ -1271,9 +1273,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (activeDashboardTab === "listings") {
       dashboardTabTitle.textContent = "Mis Publicaciones";
-      // Filtrar ítems creados por mí
-      const myName = currentUser ? (currentUser.user_metadata?.full_name || currentUser.email.split("@")[0]) : "Yo";
-      tabItems = items.filter(i => i.sellerName === myName || i.sellerName === "Yo" || i.sellerName === "Alex Dev Investments");
+      // Filtrar ítems creados por mí (excluyendo semillas y usando sellerId si está disponible)
+      const defaultItemIds = ["item_1", "item_2", "item_3", "item_4", "item_5"];
+      tabItems = items.filter(i => {
+        if (currentUser && i.sellerId === currentUser.id) return true;
+        if (!i.sellerId && !defaultItemIds.includes(i.id)) return true;
+        return false;
+      });
     } else if (activeDashboardTab === "bids") {
       dashboardTabTitle.textContent = "Mis Ofertas Activas";
       // Filtrar subastas donde he pujado

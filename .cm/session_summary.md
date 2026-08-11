@@ -23,6 +23,7 @@ Este archivo es un registro permanente para mantener el contexto entre diferente
 * **Precio de Reserva y Botón de Cancelación**: Añadido el campo opcional "Precio Mínimo de Reserva" en el formulario de creación de subastas, que despliega una insignia visual indicadora en tiempo real en la vista de detalle. Si la subasta finaliza sin superarlo, se declara desierta. Los vendedores también disponen de un botón "Cancelar Subasta" que retira el anuncio de los resultados públicos del catálogo.
 * **Lógica y simulador de pujas**: Implementados en [app.js](file:///c:/Users/4L3X/.gemini/antigravity/scratch/dbuy%20Dominican%20Buy/app.js) el buscador, enrutador simple, y el motor de contra-pujas simuladas por IA que responde activamente al usuario a los pocos segundos de realizar una oferta, ahora con soporte completo para la modalidad de **Subasta de Renta Ascendente** (`/ mes`).
 * **Servidor Local Activo**: Corriendo en el puerto local 3099 (`python -m http.server 3099`).
+* **Despliegue GitHub Pages**: Repositorio `dbuy` creado bajo la cuenta `ax-dev-investments` y publicado directamente usando la API de GitHub Pages en: `https://ax-dev-investments.github.io/dbuy/`.
 
 ---
 

@@ -1555,9 +1555,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const dashGridEl = document.querySelector(".dashboard-grid");
     if (dashGridEl) dashGridEl.classList.add("guest-mode");
 
-    // Limpiar teléfono
+    // Limpiar teléfono y nombre
     userPhone = "";
-    renderPhoneUI("");
+    renderProfileUI("", "");
 
     if (views.dashboard.classList.contains("active")) {
       renderDashboard();
@@ -1639,28 +1639,45 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // 3. Obtener el teléfono del perfil o usar el fallback de localStorage
+      // 3. Obtener el teléfono y nombre del perfil o usar fallbacks
       userPhone = (profile && profile.phone) || localStorage.getItem(`dbuy_user_phone_${user.id}`) || "";
+      const userDisplayName = (profile && profile.full_name) || localStorage.getItem(`dbuy_user_name_${user.id}`) || user.user_metadata?.full_name || user.email.split("@")[0];
 
-      // 4. Renderizar el estado del teléfono en la interfaz
-      renderPhoneUI(userPhone);
+      // 4. Renderizar el estado del perfil en la interfaz
+      renderProfileUI(userDisplayName, userPhone);
 
     } catch (e) {
       console.error("Fallo general cargando perfil:", e);
       // Fallback si la tabla profiles no responde o RLS bloquea
       userPhone = localStorage.getItem(`dbuy_user_phone_${user.id}`) || "";
-      renderPhoneUI(userPhone);
+      const userDisplayName = localStorage.getItem(`dbuy_user_name_${user.id}`) || user.user_metadata?.full_name || user.email.split("@")[0];
+      renderProfileUI(userDisplayName, userPhone);
     }
   }
 
-  function renderPhoneUI(phoneVal) {
+  function renderProfileUI(nameVal, phoneVal) {
     const setupWrapper = document.getElementById("user-phone-setup-wrapper");
     const displayWrapper = document.getElementById("user-phone-display-wrapper");
     const displayPhone = document.getElementById("user-phone-display-text");
     const setupPhoneInput = document.getElementById("user-setup-phone-input");
+    const setupNameInput = document.getElementById("user-setup-name-input");
+    const profileNameDisplay = document.getElementById("user-profile-name");
 
-    // Rellenar teléfono del vendedor en formulario de publicar si está definido
+    // Rellenar en el formulario de configuración
+    if (setupNameInput) setupNameInput.value = nameVal;
+    if (setupPhoneInput) setupPhoneInput.value = formatPhoneNumber(phoneVal);
+
+    // Actualizar nombre en el encabezado del perfil
+    if (profileNameDisplay) profileNameDisplay.textContent = nameVal;
+
+    // Rellenar en formulario de publicar si están definidos
     const pubPhoneInput = document.getElementById("pub-seller-phone");
+    const pubNameInput = document.getElementById("pub-seller-name");
+
+    if (pubNameInput) {
+      pubNameInput.value = nameVal;
+      pubNameInput.readOnly = true;
+    }
 
     if (phoneVal) {
       if (setupWrapper) setupWrapper.style.display = "none";
@@ -1675,7 +1692,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       if (setupWrapper) setupWrapper.style.display = "flex";
       if (displayWrapper) displayWrapper.style.display = "none";
-      if (setupPhoneInput) setupPhoneInput.value = "";
       if (pubPhoneInput) {
         pubPhoneInput.value = "";
         pubPhoneInput.readOnly = false;
@@ -1786,6 +1802,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (savePhoneBtn) {
     savePhoneBtn.addEventListener("click", async () => {
       const phoneInputVal = document.getElementById("user-setup-phone-input").value.replace(/\D/g, "");
+      const nameInputVal = document.getElementById("user-setup-name-input").value.trim();
+
+      if (!nameInputVal) {
+        showToast("Nombre Requerido", "Por favor ingresa tu nombre o el de tu negocio.", "warning");
+        return;
+      }
 
       if (phoneInputVal.length < 10) {
         showToast("Número Inválido", "Por favor ingresa un número de 10 dígitos (ej. 809-555-1234).", "warning");
@@ -1794,10 +1816,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!currentUser) return;
 
-      showToast("Guardando Teléfono", "Sincronizando...", "info");
+      showToast("Guardando Perfil", "Sincronizando...", "info");
 
       // 1. Guardar localmente
       localStorage.setItem(`dbuy_user_phone_${currentUser.id}`, phoneInputVal);
+      localStorage.setItem(`dbuy_user_name_${currentUser.id}`, nameInputVal);
       userPhone = phoneInputVal;
 
       // 2. Intentar guardar en Supabase
@@ -1805,14 +1828,17 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const { error } = await window.supabaseClient
             .from("profiles")
-            .update({ phone: phoneInputVal })
+            .update({ 
+              phone: phoneInputVal,
+              full_name: nameInputVal 
+            })
             .eq("id", currentUser.id);
 
           if (error) {
             console.error("Error guardando en Supabase profiles:", error);
             showToast("Guardado Local", "Guardado en el navegador (Supabase no respondió).", "warning");
           } else {
-            showToast("Perfil Completado", "Teléfono guardado con éxito.", "success");
+            showToast("Perfil Actualizado", "Tus datos han sido guardados con éxito.", "success");
           }
         } catch (e) {
           console.error("Fallo de conexión al guardar:", e);
@@ -1822,7 +1848,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Guardado Local", "Guardado localmente en tu equipo.", "success");
       }
 
-      renderPhoneUI(userPhone);
+      renderProfileUI(nameInputVal, userPhone);
     });
   }
 
@@ -1832,10 +1858,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const setupWrapper = document.getElementById("user-phone-setup-wrapper");
       const displayWrapper = document.getElementById("user-phone-display-wrapper");
       const setupPhoneInput = document.getElementById("user-setup-phone-input");
+      const setupNameInput = document.getElementById("user-setup-name-input");
+      const profileNameDisplay = document.getElementById("user-profile-name");
 
       if (setupWrapper) setupWrapper.style.display = "flex";
       if (displayWrapper) displayWrapper.style.display = "none";
       if (setupPhoneInput) setupPhoneInput.value = formatPhoneNumber(userPhone);
+      if (setupNameInput && profileNameDisplay) {
+        setupNameInput.value = profileNameDisplay.textContent;
+      }
     });
   }
 

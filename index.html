@@ -325,13 +325,14 @@
               
               <!-- Configuración de Teléfono / WhatsApp -->
               <div class="user-phone-setup" id="user-phone-setup-wrapper" style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.6rem; flex-wrap: wrap;">
-                <span style="font-size: 0.8rem; color: #ff9f0a; display: block; width: 100%;"><i class="fa-solid fa-triangle-exclamation"></i> Completa tu WhatsApp para contacto:</span>
-                <input type="tel" id="user-setup-phone-input" placeholder="Ej. 809-555-1234" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8rem; max-width: 140px; border-radius: var(--radius-sm);">
+                <span style="font-size: 0.8rem; color: #ff9f0a; display: block; width: 100%;"><i class="fa-solid fa-circle-info"></i> Configura tu información de vendedor:</span>
+                <input type="text" id="user-setup-name-input" placeholder="Nombre o Negocio" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8rem; max-width: 160px; border-radius: var(--radius-sm);" required>
+                <input type="tel" id="user-setup-phone-input" placeholder="WhatsApp (Ej. 809-555-1234)" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8rem; max-width: 150px; border-radius: var(--radius-sm);" required>
                 <button class="btn btn-primary" id="user-save-phone-btn" style="padding: 0.35rem 0.8rem; font-size: 0.8rem; border-radius: var(--radius-sm);"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
               </div>
-              <div id="user-phone-display-wrapper" style="display: none; margin-top: 0.6rem; font-size: 0.85rem; color: var(--color-blue-glow); align-items: center;">
-                <i class="fa-brands fa-whatsapp" style="color: #30d158; font-size: 1.1rem; margin-right: 0.3rem;"></i> WhatsApp: <strong id="user-phone-display-text" style="color: #fff; margin-left: 0.2rem;">809-555-1234</strong>
-                <button id="edit-user-phone-btn" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; margin-left: 0.6rem; font-size: 0.8rem; padding: 0.2rem;"><i class="fa-solid fa-pen-to-square"></i></button>
+              <div id="user-phone-display-wrapper" style="display: none; margin-top: 0.6rem; font-size: 0.85rem; color: var(--color-blue-glow); align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <span style="display: flex; align-items: center;"><i class="fa-brands fa-whatsapp" style="color: #30d158; font-size: 1.1rem; margin-right: 0.3rem;"></i> WhatsApp: <strong id="user-phone-display-text" style="color: #fff; margin-left: 0.2rem;">809-555-1234</strong></span>
+                <button id="edit-user-phone-btn" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.8rem; padding: 0.2rem;"><i class="fa-solid fa-pen-to-square"></i> Editar Perfil</button>
               </div>
             </div>
             <button class="btn btn-secondary" id="google-signout-btn" style="margin-left: auto; background: rgba(255, 59, 48, 0.12); color: #ff453a; border: 1px solid rgba(255, 59, 48, 0.2); display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: var(--radius-sm); font-weight: 600; align-self: flex-start;">

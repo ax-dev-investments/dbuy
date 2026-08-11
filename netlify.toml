@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+
+# Redireccion de SPA: Cualquier ruta que no sea un archivo fisico
+# sera redirigida a index.html para evitar errores 404
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

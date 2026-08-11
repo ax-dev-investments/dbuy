@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const priceInput = document.getElementById("pub-price");
   const durationFieldWrapper = document.getElementById("duration-field-wrapper");
   const reservePriceFieldWrapper = document.getElementById("reserve-price-field-wrapper");
+  const buyNowFieldWrapper = document.getElementById("buy-now-field-wrapper");
   const presetImagesList = document.getElementById("preset-images-list");
   const pubImageInput = document.getElementById("pub-image-url");
   const pubCancelBtn = document.getElementById("pub-cancel-btn");
@@ -548,6 +549,19 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div class="bid-error-msg" id="detail-bid-error">Monto inválido</div>
             
+            ${item.buyNowPrice ? `
+            <div style="margin: 0.8rem 0; text-align: center; display: flex; flex-direction: column; gap: 0.4rem; width: 100%;">
+              <div style="font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 0.3rem; margin: 0.2rem 0;">
+                <hr style="flex:1; border:0; border-top:1px solid rgba(255,255,255,0.08);">
+                <span>O TAMBIÉN</span>
+                <hr style="flex:1; border:0; border-top:1px solid rgba(255,255,255,0.08);">
+              </div>
+              <button type="button" class="btn btn-accent" id="detail-instant-buy-btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 700; background: var(--color-blue-glow); color: #000;">
+                <i class="fa-solid fa-bolt" style="color: #ff9f0a;"></i> Compra Inmediata por RD$ ${item.buyNowPrice.toLocaleString()}
+              </button>
+            </div>
+            ` : ""}
+
             <!-- Indicador de que la IA/Competidor está "escribiendo" su puja -->
             <div class="competitor-typing-indicator" id="competitor-indicator" style="display:none;">
               <span class="competitor-typing-dot"></span>
@@ -577,6 +591,11 @@ document.addEventListener("DOMContentLoaded", () => {
               <span style="font-size: 0.8rem; color: var(--text-secondary);" id="detail-bids-count">
                 Total de ofertas: ${item.bidsCount}
               </span>
+              ${item.buyNowPrice ? `
+              <div style="font-size: 0.85rem; color: var(--color-blue-glow); margin-top: 0.4rem; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="fa-solid fa-bolt" style="color: #ff9f0a;"></i> Compra Inmediata: <span style="color: #fff;">RD$ ${item.buyNowPrice.toLocaleString()}</span>
+              </div>
+              ` : ""}
             </div>
 
             ${bidActionHTML}
@@ -943,6 +962,46 @@ document.addEventListener("DOMContentLoaded", () => {
         // Guardar ID del artículo en el formulario
         document.getElementById("checkout-payment-form").dataset.itemId = item.id;
         document.getElementById("checkout-payment-form").dataset.feeAmount = serviceFee;
+        document.getElementById("checkout-payment-form").dataset.isInstantBuy = "false";
+
+        // Mostrar Modal
+        checkoutModal.style.display = "flex";
+      });
+    }
+
+    // Abrir Modal de Checkout para Compra Inmediata (Buy It Now) en subasta
+    const instantBuyBtn = document.getElementById("detail-instant-buy-btn");
+    if (instantBuyBtn) {
+      instantBuyBtn.addEventListener("click", () => {
+        if (!currentUser) {
+          showToast("Conecta tu cuenta", "Inicia sesión con Google en 'Mi Cuenta' para comprar de inmediato.", "warning");
+          switchView("account");
+          return;
+        }
+
+        const checkoutModal = document.getElementById("checkout-modal");
+        const checkoutTitle = document.getElementById("checkout-item-title");
+        const checkoutPrice = document.getElementById("checkout-item-price");
+        const checkoutSubtotal = document.getElementById("checkout-subtotal");
+        const checkoutFee = document.getElementById("checkout-fee");
+        const checkoutTotal = document.getElementById("checkout-total");
+        const paySubmitBtn = document.getElementById("checkout-pay-submit-btn");
+
+        const targetPrice = item.buyNowPrice;
+        const serviceFee = Math.round(targetPrice * 0.05);
+
+        checkoutTitle.textContent = `${item.title} (Compra Inmediata)`;
+        checkoutPrice.textContent = `RD$ ${targetPrice.toLocaleString()}`;
+        checkoutSubtotal.textContent = `RD$ ${targetPrice.toLocaleString()}`;
+        checkoutFee.textContent = `RD$ ${serviceFee.toLocaleString()}`;
+        checkoutTotal.textContent = `RD$ ${serviceFee.toLocaleString()}`;
+        paySubmitBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Pagar Comisión RD$ ${serviceFee.toLocaleString()}`;
+
+        // Guardar ID y variables en el formulario
+        document.getElementById("checkout-payment-form").dataset.itemId = item.id;
+        document.getElementById("checkout-payment-form").dataset.feeAmount = serviceFee;
+        document.getElementById("checkout-payment-form").dataset.isInstantBuy = "true";
+        document.getElementById("checkout-payment-form").dataset.instantBuyPrice = targetPrice;
 
         // Mostrar Modal
         checkoutModal.style.display = "flex";
@@ -1070,6 +1129,7 @@ document.addEventListener("DOMContentLoaded", () => {
     priceInput.placeholder = "Ej. 875,000";
     durationFieldWrapper.style.display = "none";
     if (reservePriceFieldWrapper) reservePriceFieldWrapper.style.display = "none";
+    if (buyNowFieldWrapper) buyNowFieldWrapper.style.display = "none";
   });
 
   typeAuctionRadio.addEventListener("click", () => {
@@ -1080,6 +1140,7 @@ document.addEventListener("DOMContentLoaded", () => {
     priceInput.placeholder = "Ej. 35,000";
     durationFieldWrapper.style.display = "block";
     if (reservePriceFieldWrapper) reservePriceFieldWrapper.style.display = "block";
+    if (buyNowFieldWrapper) buyNowFieldWrapper.style.display = "block";
   });
 
   pubCancelBtn.addEventListener("click", () => {
@@ -1108,6 +1169,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const reservePriceRaw = document.getElementById("pub-reserve-price").value.replace(/\D/g, "");
     const reservePrice = isAuction && reservePriceRaw ? parseInt(reservePriceRaw) : null;
 
+    const buyNowPriceRaw = document.getElementById("pub-buy-now-price").value.replace(/\D/g, "");
+    const buyNowPrice = isAuction && buyNowPriceRaw ? parseInt(buyNowPriceRaw) : null;
+
     if (editingItemId) {
       // Editar artículo existente
       const updatedFields = {
@@ -1123,7 +1187,8 @@ document.addEventListener("DOMContentLoaded", () => {
         sellerPhone,
         marketLink,
         marketValue,
-        reservePrice: isAuction ? reservePrice : null
+        reservePrice: isAuction ? reservePrice : null,
+        buyNowPrice: isAuction ? buyNowPrice : null
       };
 
       if (isAuction) {
@@ -1159,6 +1224,7 @@ document.addEventListener("DOMContentLoaded", () => {
         marketLink,
         marketValue,
         reservePrice,
+        buyNowPrice,
         createdAt: new Date().toISOString()
       };
 
@@ -1797,6 +1863,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Formateador en tiempo real para el precio de compra inmediata con comas
+  const pubBuyNowPriceInput = document.getElementById("pub-buy-now-price");
+  if (pubBuyNowPriceInput) {
+    pubBuyNowPriceInput.addEventListener("input", (e) => {
+      let cleaned = e.target.value.replace(/\D/g, "");
+      if (cleaned) {
+        e.target.value = Number(cleaned).toLocaleString("en-US");
+      } else {
+        e.target.value = "";
+      }
+    });
+  }
+
   // Listeners de Guardar y Editar Teléfono
   const savePhoneBtn = document.getElementById("user-save-phone-btn");
   if (savePhoneBtn) {
@@ -2137,6 +2216,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("pub-market-link").value = item.marketLink || "";
     document.getElementById("pub-market-value").value = item.marketValue ? Number(item.marketValue).toLocaleString("en-US") : "";
     document.getElementById("pub-reserve-price").value = item.reservePrice ? Number(item.reservePrice).toLocaleString("en-US") : "";
+    document.getElementById("pub-buy-now-price").value = item.buyNowPrice ? Number(item.buyNowPrice).toLocaleString("en-US") : "";
     
     // Cargar imágenes guardadas
     selectedImages = getItemImages(item);
@@ -2210,7 +2290,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const reservePriceInput = document.getElementById("pub-reserve-price");
     if (reservePriceInput) reservePriceInput.value = "";
 
+    const buyNowPriceInput = document.getElementById("pub-buy-now-price");
+    if (buyNowPriceInput) buyNowPriceInput.value = "";
+
     if (reservePriceFieldWrapper) reservePriceFieldWrapper.style.display = "none";
+    if (buyNowFieldWrapper) buyNowFieldWrapper.style.display = "none";
     if (durationFieldWrapper) durationFieldWrapper.style.display = "none";
   }
 
@@ -2288,6 +2372,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const itemId = checkoutPaymentForm.dataset.itemId;
       const feeAmount = parseInt(checkoutPaymentForm.dataset.feeAmount);
+      const isInstantBuy = checkoutPaymentForm.dataset.isInstantBuy === "true";
+      const instantBuyPrice = parseInt(checkoutPaymentForm.dataset.instantBuyPrice || "0");
       const paySubmitBtn = document.getElementById("checkout-pay-submit-btn");
 
       // Simulación de carga
@@ -2296,7 +2382,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       setTimeout(() => {
         // Guardar estado en Supabase/local
-        const updatedItem = dBuyDB.updateItem(itemId, { isSold: true });
+        let updatedItem;
+        if (isInstantBuy) {
+          const myName = currentUser ? (currentUser.user_metadata?.full_name || currentUser.email.split("@")[0]) : "Yo";
+          updatedItem = dBuyDB.instantBuyAuction(itemId, myName, instantBuyPrice);
+        } else {
+          updatedItem = dBuyDB.updateItem(itemId, { isSold: true });
+        }
 
         // Notificación de éxito
         showToast(

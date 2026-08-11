@@ -236,6 +236,43 @@ const dBuyDB = {
     return item;
   },
 
+  instantBuyAuction(itemId, bidderName, buyNowPrice) {
+    const items = this.getItems();
+    const index = items.findIndex(item => item.id === itemId);
+    if (index === -1) return null;
+
+    const item = items[index];
+    if (item.type !== "auction") return null;
+
+    const newBid = {
+      bidder: bidderName,
+      amount: buyNowPrice,
+      time: new Date().toISOString()
+    };
+
+    item.currentBid = buyNowPrice;
+    item.price = buyNowPrice;
+    item.bidsCount += 1;
+    if (!item.bidsHistory) item.bidsHistory = [];
+    item.bidsHistory.unshift(newBid);
+
+    item.isSold = true;
+    item.endTime = new Date().toISOString(); // End the auction now
+
+    items[index] = item;
+    this.saveItems(items);
+
+    // Save bid in user's registry
+    const isSelf = bidderName === "Yo" || bidderName.includes("(Tú)") || bidderName === localStorage.getItem(`dbuy_user_name_`); // check broad matches
+    const userBids = JSON.parse(localStorage.getItem("dbuy_user_bids")) || [];
+    if (!userBids.includes(itemId)) {
+      userBids.push(itemId);
+      localStorage.setItem("dbuy_user_bids", JSON.stringify(userBids));
+    }
+
+    return item;
+  },
+
   getWatchlist() {
     this.init();
     return JSON.parse(localStorage.getItem("dbuy_watchlist")) || [];
